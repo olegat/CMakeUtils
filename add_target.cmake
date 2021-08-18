@@ -25,6 +25,7 @@
 #   [COMPILE_OPTIONS_INTERFACE [items...]] )
 #   [COMPILE_OPTIONS_PUBLIC [items...]]
 #   [COMPILE_OPTIONS_PRIVATE [items...]]
+#   [OUTPUT_NAME name]
 # ```
 #
 # This functions is a wrapper for these functions:
@@ -83,12 +84,16 @@
 #   `COMPILE_OPTIONS_PRIVATE`,
 #     Wrappers for `target_compile_options()`.
 #
+#   `OUTPUT_NAME`
+#     Sets the target property `OUTPUT_NAME` on this target.
+#
 function(add_target target_name)
   # Parse ${ARGN} (unnamed arguments)
   set( parse_Options
     )
   set( parse_OneValue
-    TYPE )
+    TYPE
+    OUTPUT_NAME )
   set( parse_MultiValue
     SOURCES_INTERFACE
     SOURCES_PUBLIC
@@ -111,13 +116,11 @@ function(add_target target_name)
     COMPILE_OPTIONS_INTERFACE
     COMPILE_OPTIONS_PUBLIC
     COMPILE_OPTIONS_PRIVATE )
-  message("add_target(${target_name} ${ARGN})")
   cmake_parse_arguments( args
     "${parse_Options}"
     "${parse_OneValue}"
     "${parse_MultiValue}"
     ${ARGN} )
-  message("||${args_TYPE}||\n||${args_SOURCES_PRIVATE}||")
 
   # Create target:
   if( NOT DEFINED args_TYPE )
@@ -129,6 +132,16 @@ function(add_target target_name)
   else()
     message(FATAL_ERROR "TYPE=${args_TYPE} is not an allowed value." )
   endif()
+
+  # Set target properties:
+  set( target_properties
+    OUTPUT_NAME )
+  foreach( property ${target_properties} )
+    if( DEFINED args_${property} )
+      set_target_properties(
+        ${target_name} PROPERTIES ${property} "${args_${property}}" )
+    endif()
+  endforeach()
 
   # Set CMake built-in properties:
   target_sources( ${target_name}
